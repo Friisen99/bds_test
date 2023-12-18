@@ -1,0 +1,12 @@
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/bin/Debug/net7.0/Utilities.deps.json
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/bin/Debug/net7.0/Utilities.dll
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/bin/Debug/net7.0/Utilities.pdb
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/obj/Debug/net7.0/Utilities.csproj.AssemblyReference.cache
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/obj/Debug/net7.0/Utilities.GeneratedMSBuildEditorConfig.editorconfig
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/obj/Debug/net7.0/Utilities.AssemblyInfoInputs.cache
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/obj/Debug/net7.0/Utilities.AssemblyInfo.cs
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/obj/Debug/net7.0/Utilities.csproj.CoreCompileInputs.cache
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/obj/Debug/net7.0/Utilities.dll
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/obj/Debug/net7.0/refint/Utilities.dll
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/obj/Debug/net7.0/Utilities.pdb
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/obj/Debug/net7.0/ref/Utilities.dll

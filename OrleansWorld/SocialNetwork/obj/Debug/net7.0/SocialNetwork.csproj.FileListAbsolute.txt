@@ -1,0 +1,15 @@
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/bin/Debug/net7.0/SocialNetwork.deps.json
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/bin/Debug/net7.0/SocialNetwork.dll
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/bin/Debug/net7.0/SocialNetwork.pdb
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/bin/Debug/net7.0/Utilities.dll
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/bin/Debug/net7.0/Utilities.pdb
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/obj/Debug/net7.0/SocialNetwork.csproj.AssemblyReference.cache
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/obj/Debug/net7.0/SocialNetwork.GeneratedMSBuildEditorConfig.editorconfig
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/obj/Debug/net7.0/SocialNetwork.AssemblyInfoInputs.cache
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/obj/Debug/net7.0/SocialNetwork.AssemblyInfo.cs
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/obj/Debug/net7.0/SocialNetwork.csproj.CoreCompileInputs.cache
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/obj/Debug/net7.0/SocialNetwork.csproj.CopyComplete
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/obj/Debug/net7.0/SocialNetwork.dll
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/obj/Debug/net7.0/refint/SocialNetwork.dll
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/obj/Debug/net7.0/SocialNetwork.pdb
+/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/obj/Debug/net7.0/ref/SocialNetwork.dll
