@@ -130,13 +130,18 @@ internal class StreamClient
         await join.Init(tagStream, likeStream, joinedResultStream, windowSlide, windowLength);
 
         // set up one filter operator with one source stream
-        // ... ...
+        var filter = client.GetGrain<IFilterOperator>("filter");
+        var filteredResultStream = streamProvider.GetStream<Event>(StreamId.Create("filteredResult", Guid.NewGuid()));
+        await filter.Init(joinedResultStream, filteredResultStream);
 
         // set up one windowed aggregate operator with one source stream
-        // ... ...
+        var aggregate = client.GetGrain<IWindowAggregateOperator>("aggregate");
+        var aggregatedResultStream = streamProvider.GetStream<Event>(StreamId.Create("aggregatedResult", Guid.NewGuid()));
+        await aggregate.Init(filteredResultStream, aggregatedResultStream, windowSlide, windowLength);
 
         // set up one sink operator to write the result to a local file
-        // ... ...
+        var sink = client.GetGrain<ISinkOperator>("sink");
+        await sink.Init(aggregatedResultStream, resultFile);
 
         Console.WriteLine($"The query topology is built. ");
     }
@@ -147,7 +152,7 @@ internal class StreamClient
 
         // STEP 1: read the expected result
         var expected = new List<Tuple<int, int>>();
-        using (var file = new StreamReader(dataDirectory + @"..\expected_result.txt"))
+        using (var file = new StreamReader(dataDirectory + @"../expected_result.txt"))
         { 
             var line = file.ReadLine();
             while (line != null)

@@ -39,7 +39,23 @@ public static class Functions
 
     public static Func<long, List<Event>, List<Event>> WindowAggregator = (timestamp, events) =>
     {
-        throw new NotImplementedException();
+        //initialize a dictionary to store the number of likes for each photo
+        var photoLikes = new Dictionary<int, MyCounter>();
+        //go over the events in the window and aggregate the number of likes for each photo
+        foreach (var e in events)
+        {
+            var joinedResult = Event.GetContent<Tuple<long, long, int, int>>(e);
+            if (!photoLikes.ContainsKey(joinedResult.Item3))
+                photoLikes[joinedResult.Item3] = new MyCounter();
+            photoLikes[joinedResult.Item3].Increment();
+        }
+        //create a list of events to return
+        var result = new List<Event>();
+        foreach (var photoID in photoLikes.Keys)
+        {
+            result.Add(Event.CreateEvent(timestamp, EventType.Regular, new Tuple<int, int>(photoID, photoLikes[photoID].Get())));
+        }
+        return result;
     };
 
     public static Func<string, Event, Null> Sink = (resultFile, e) =>

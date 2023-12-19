@@ -2,6 +2,7 @@
 using Utilities;
 using SocialNetwork;
 using System.Diagnostics;
+using System.Net.WebSockets;
 
 namespace Library.Stream;
 
@@ -23,6 +24,7 @@ internal sealed class WindowJoinOperator : Grain, IWindowJoinOperator
     // ... ... ...
     private Dictionary<long, List<Event>> tagEvents = new Dictionary<long, List<Event>>();
     private Dictionary<long, List<Event>> likeEvents = new Dictionary<long, List<Event>>();
+    private int joinedCount = 0; // TODO: remove
 
     public async Task Init(IAsyncStream<Event> inputStream1, IAsyncStream<Event> inputStream2, IAsyncStream<Event> outputStream, int windowSlide, int windowLength)
     {
@@ -44,7 +46,7 @@ internal sealed class WindowJoinOperator : Grain, IWindowJoinOperator
         {
             case EventType.Regular:
                 Debug.Assert(e.timestamp > maxReceivedWatermark[0]);
-                ProcessRegularEvent(e, 1);
+                await ProcessRegularEvent(e, 1);
                 break;
             case EventType.Watermark:
                 maxReceivedWatermark[0] = Math.Max(maxReceivedWatermark[0], e.timestamp);
@@ -61,7 +63,7 @@ internal sealed class WindowJoinOperator : Grain, IWindowJoinOperator
         {
             case EventType.Regular:
                 Debug.Assert(e.timestamp > maxReceivedWatermark[1]);
-                ProcessRegularEvent(e, 2);
+                await ProcessRegularEvent(e, 2);
                 break;
             case EventType.Watermark:
                 maxReceivedWatermark[1] = Math.Max(maxReceivedWatermark[1], e.timestamp);
@@ -74,136 +76,114 @@ internal sealed class WindowJoinOperator : Grain, IWindowJoinOperator
 
     async Task ProcessWatermark()
     {
-        throw new NotImplementedException();
+        // process watermark for each stream
+        ProcessStreamWaterMark(maxReceivedWatermark[0], tagEvents);
+        ProcessStreamWaterMark(maxReceivedWatermark[1], likeEvents);
+
+        // make new watermark event
+        Event newWaterMarkEvent = Event.CreateEvent(Math.Max(maxReceivedWatermark[0], maxReceivedWatermark[1]), EventType.Watermark, Array.Empty<byte>());
+        // emit new watermark event
+        await outputStream.OnNextAsync(newWaterMarkEvent);
+    }
+
+    private void ProcessStreamWaterMark(long WM, Dictionary<long, List<Event>> events)
+    {
+        if (WM <= 0) return; // skip processing
+
+        // retreive windows
+        List<long> windowIDs = GetRelevantWindowStarts(WM, this.windowSlide, this.windowLength).ToList();
+        foreach (long windowStart in windowIDs)
+        {
+            long windowEnd = windowStart + this.windowLength;
+            if (windowEnd <= WM) events.Remove(windowStart);// iff the window is completely before the watermark, we can delete it
+        }
     }
 
     async Task ProcessRegularEvent(Event e, int sourceID)
     {
+
+        // if (sourceID == 1 && )
+        bool didPrint = false;
+
+        // get the windows for each stream
         Dictionary<long, List<Event>> currentStreamEvents = (sourceID == 1) ? tagEvents : likeEvents;
         Dictionary<long, List<Event>> otherStreamEvents = (sourceID == 1) ? likeEvents : tagEvents;
 
-        // Calculate the start window ID and add two more windows to cover the overlap
-        long startWindowId = Helper.GetWindowInstanceID(e.timestamp, windowSlide);
-        List<long> relevantWindows = new List<long>
-        {
-            startWindowId,
-            startWindowId + windowSlide,
-            startWindowId + 2 * windowSlide
-        };
-
-        Console.WriteLine("--------------------------------------------------");
-
-
-        // Extract and print tag or like event details
+        // TESTING: Extract and print tag or like event details
         Tuple<int, int> eventDetails = Event.GetContent<Tuple<int, int>>(e);
         if (sourceID == 1) // Tag
         {
-            Console.WriteLine($"Tag:ts = {e.timestamp}, photoID = {eventDetails.Item1}, userID = {eventDetails.Item2}. Window1 = {relevantWindows[0]}, Window2 = {relevantWindows[1]}, Window3 = {relevantWindows[2]}");
+            Console.WriteLine($"Tag <{e.timestamp}, photoID = {eventDetails.Item1}, userID = {eventDetails.Item2}>");
+            didPrint = true;
         }
         else // Like
         {
-            Console.WriteLine($"Like: ts = {e.timestamp}, userID = {eventDetails.Item1}, photoID = {eventDetails.Item2}. Window1 = {relevantWindows[0]}, Window2 = {relevantWindows[1]}, Window3 = {relevantWindows[2]}");
+            Console.WriteLine($"Like <{e.timestamp}, userID = {eventDetails.Item1}, photoID = {eventDetails.Item2}>");
+            didPrint = true;
         }
+        // Get relevant window starts for the event
+        var windowIDs = GetRelevantWindowStarts(e.timestamp, this.windowSlide, this.windowLength);
 
-        // Store the event in each relevant window and attempt to join with events from the other stream
-        foreach (var windowId in relevantWindows)
+        // assert that there is at least one relevant window
+        Debug.Assert(windowIDs.Count() > 0);
+
+        // TESTING: Print the relevant window starts.
+        // foreach (var windowStart in windowStarts)
+        // {
+        //     Console.WriteLine($"Event timestamp {e.timestamp} falls into window starting at {windowStart}");
+        // }
+
+
+
+        // go over the window instances
+        // Step 1: Store the event in each relevant window
+        // Step 2: Attempt to join with events from the other stream in the same window
+        foreach (long windowID in windowIDs)
         {
-            if (!currentStreamEvents.ContainsKey(windowId))
-                currentStreamEvents[windowId] = new List<Event>();
-            currentStreamEvents[windowId].Add(e);
+            //store the event
+            if (!currentStreamEvents.ContainsKey(windowID))
+                currentStreamEvents[windowID] = new List<Event>();
+            currentStreamEvents[windowID].Add(e);
 
-            if (otherStreamEvents.ContainsKey(windowId))
+            // Determine if there are events in the other stream to join with
+            if (otherStreamEvents.ContainsKey(windowID))
             {
-                foreach (Event otherStreamEvent in otherStreamEvents[windowId])
+                // loop over the events in the other stream
+                foreach (Event otherStreamEvent in otherStreamEvents[windowID])
                 {
-                    // Console.WriteLine($"windowID = {windowId}, looking at other stream event with ts = {otherStreamEvent.timestamp}");
-                    long upperBoundaryTimestamp = windowId + windowLength - 1;
-                    Event joinedEvent = Functions.WindowJoin(upperBoundaryTimestamp, e, otherStreamEvent);
+                    // this is possible join candidates
+                    // use qeury specific join function to determine if they can be joined
+                    // Event joinedEvent = Functions.WindowJoin(windowID + windowLength - 1, e, otherStreamEvent);
+                    // we want tag first, like second
+                    Event joinedEvent = sourceID == 1 ? Functions.WindowJoin(windowID + windowLength - 1, e, otherStreamEvent)
+                                                      : Functions.WindowJoin(windowID + windowLength - 1, otherStreamEvent, e);
 
+                    // if the join is successful, print the joined event
                     if (joinedEvent != null)
                     {
                         var jEve = Event.GetContent<Tuple<long, long, int, int>>(joinedEvent);
-                        // Console.WriteLine($"WindowID is: {windowId}");
-                        Console.WriteLine($"Joined: ts = {joinedEvent.timestamp}, {jEve.Item1}, {jEve.Item2}, photoID = {jEve.Item3}, userID = {jEve.Item4}");
+                        Console.WriteLine($"Joined: <{joinedEvent.timestamp}, {jEve.Item1}, {jEve.Item2}, photoID = {jEve.Item3}, userID = {jEve.Item4}>");
+                        this.joinedCount++;
                         await outputStream.OnNextAsync(joinedEvent);
                     }
                 }
             }
         }
-        //print the current state of both streams
-        Console.WriteLine("Tag Stream:");
-        foreach (var window in tagEvents)
-        {
-            Console.WriteLine($"WindowID: {window.Key}");
-            foreach (var eve in window.Value)
-            {
-                var content = Event.GetContent<Tuple<int, int>>(eve);
-                Console.WriteLine($"ts = {eve.timestamp}, photoID = {content.Item1}, userID = {content.Item2}");
-            }
-        }
-        Console.WriteLine("Like Stream:");
-        foreach (var window in likeEvents)
-        {
-            Console.WriteLine($"WindowID: {window.Key}");
-            foreach (var eve in window.Value)
-            {
-                var content = Event.GetContent<Tuple<int, int>>(eve);
-                Console.WriteLine($"ts = {eve.timestamp}, userID = {content.Item1}, photoID = {content.Item2}");
-            }
-        }
-        Console.WriteLine("--------------------------------------------------\n");
+        Console.WriteLine($"Printed = {didPrint} => {this.joinedCount} joined events");
+        Console.WriteLine("--------------------------------------------------\n\n");
     }
 
+    private IEnumerable<long> GetRelevantWindowStarts(long timestamp, int windowSlide, int windowLength)
+    {
+        long firstPossibleWindowStart = timestamp - windowLength + windowSlide;
+        firstPossibleWindowStart = (firstPossibleWindowStart / windowSlide) * windowSlide; // align to window slide
 
-    // async Task ProcessRegularEvent(Event e, int sourceID)
-    // {
+        long lastPossibleWindowStart = Helper.GetWindowInstanceID(timestamp, windowSlide);
 
-    //     // TAGS:  <timestamp, photoID, userID>
-    //     // LIKES: <timestamp, userID, photoID>
-
-    //     Dictionary<long, List<Event>> currentStreamEvents = (sourceID == 1) ? tagEvents : likeEvents;
-    //     Dictionary<long, List<Event>> otherStreamEvents = (sourceID == 1) ? likeEvents : tagEvents;
-
-    //     // Get relevant windows
-    //     List<long> relevantWindows = new List<long>
-    //     {
-    //         Helper.GetWindowInstanceID(e.timestamp, windowSlide),
-    //         Helper.GetWindowInstanceID(e.timestamp, windowSlide) + windowLength - windowSlide
-    //     };
-
-    //     // Extract and print tag or like event details
-    //     Tuple<int, int> eventDetails = Event.GetContent<Tuple<int, int>>(e);
-    //     if (sourceID == 1) // Tag
-    //     {
-    //         Console.WriteLine($"Tag:ts = {e.timestamp}, photoID = {eventDetails.Item1}, userID = {eventDetails.Item2}. Window1 = {relevantWindows[0]}, Window2 = {relevantWindows[1]}");
-    //     }
-    //     else // Like
-    //     {
-    //         Console.WriteLine($"Like: ts = {e.timestamp}, userID = {eventDetails.Item2}, photoID = {eventDetails.Item1}. Window1 = {relevantWindows[0]}, Window2 = {relevantWindows[1]}");
-    //     }
-
-    //     // Store the event in each relevant window and attempt to join with events from the other stream
-    //     foreach (var windowId in relevantWindows)
-    //     {
-    //         if (!currentStreamEvents.ContainsKey(windowId))
-    //             currentStreamEvents[windowId] = new List<Event>();
-    //         currentStreamEvents[windowId].Add(e);
-
-    //         if (otherStreamEvents.ContainsKey(windowId))
-    //         {
-    //             foreach (Event otherStreamEvent in otherStreamEvents[windowId])
-    //             {
-    //                 long upperBoundaryTimestamp = windowId + windowLength - 1;
-    //                 Event joinedEvent = Functions.WindowJoin(upperBoundaryTimestamp, e, otherStreamEvent);
-
-    //                 if (joinedEvent != null)
-    //                 {
-    //                     var jEve = Event.GetContent<Tuple<long, long, int, int>>(joinedEvent);
-    //                     Console.WriteLine($"Joined: ts = {joinedEvent.timestamp}, {jEve.Item1}, {jEve.Item2}, photoID = {jEve.Item3}, userID = {jEve.Item4}");
-    //                     await outputStream.OnNextAsync(joinedEvent);
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+        for (long windowStart = firstPossibleWindowStart; windowStart <= lastPossibleWindowStart; windowStart += windowSlide)
+        {
+            if (windowStart >= 0) // Avoid negative window starts
+                yield return windowStart;
+        }
+    }
 }

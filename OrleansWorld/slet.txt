@@ -1,0 +1,18 @@
+Joined: <14999, 2000, 3000, photoID = 1, userID = 2>
+Joined: <14999, 6000, 3000, photoID = 2, userID = 1>
+Joined: <14999, 1000, 11000, photoID = 1, userID = 3>
+Joined: <14999, 12000, 7000, photoID = 3, userID = 2>
+Joined: <14999, 14000, 2000, photoID = 3, userID = 4>
+
+Joined: <19999, 12000, 7000, photoID = 3, userID = 2>
+Joined: <19999, 8000, 16000, photoID = 1, userID = 4>
+
+Joined: <24999, 24000, 13000, photoID = 3, userID = 5>
+Joined: <24999, 17000, 22000, photoID = 2, userID = 2>
+Joined: <24999, 24000, 23000, photoID = 3, userID = 1>
+
+Joined: <29999, 17000, 22000, photoID = 2, userID = 2>
+Joined: <29999, 24000, 23000, photoID = 3, userID = 1>
+
+Joined: <34999, 24000, 23000, photoID = 3, userID = 1>
+
