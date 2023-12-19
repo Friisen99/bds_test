@@ -91,15 +91,18 @@ internal sealed class WindowJoinOperator : Grain, IWindowJoinOperator
             startWindowId + 2 * windowSlide
         };
 
+        Console.WriteLine("--------------------------------------------------");
+
+
         // Extract and print tag or like event details
         Tuple<int, int> eventDetails = Event.GetContent<Tuple<int, int>>(e);
         if (sourceID == 1) // Tag
         {
-            Console.WriteLine($"Tag:ts = {e.timestamp}, photoID = {eventDetails.Item1}, userID = {eventDetails.Item2}. Window1 = {relevantWindows[0]}, Window2 = {relevantWindows[1]}");
+            Console.WriteLine($"Tag:ts = {e.timestamp}, photoID = {eventDetails.Item1}, userID = {eventDetails.Item2}. Window1 = {relevantWindows[0]}, Window2 = {relevantWindows[1]}, Window3 = {relevantWindows[2]}");
         }
         else // Like
         {
-            Console.WriteLine($"Like: ts = {e.timestamp}, userID = {eventDetails.Item1}, photoID = {eventDetails.Item2}. Window1 = {relevantWindows[0]}, Window2 = {relevantWindows[1]}");
+            Console.WriteLine($"Like: ts = {e.timestamp}, userID = {eventDetails.Item1}, photoID = {eventDetails.Item2}. Window1 = {relevantWindows[0]}, Window2 = {relevantWindows[1]}, Window3 = {relevantWindows[2]}");
         }
 
         // Store the event in each relevant window and attempt to join with events from the other stream
@@ -113,18 +116,42 @@ internal sealed class WindowJoinOperator : Grain, IWindowJoinOperator
             {
                 foreach (Event otherStreamEvent in otherStreamEvents[windowId])
                 {
+                    // Console.WriteLine($"windowID = {windowId}, looking at other stream event with ts = {otherStreamEvent.timestamp}");
                     long upperBoundaryTimestamp = windowId + windowLength - 1;
                     Event joinedEvent = Functions.WindowJoin(upperBoundaryTimestamp, e, otherStreamEvent);
 
                     if (joinedEvent != null)
                     {
                         var jEve = Event.GetContent<Tuple<long, long, int, int>>(joinedEvent);
+                        // Console.WriteLine($"WindowID is: {windowId}");
                         Console.WriteLine($"Joined: ts = {joinedEvent.timestamp}, {jEve.Item1}, {jEve.Item2}, photoID = {jEve.Item3}, userID = {jEve.Item4}");
                         await outputStream.OnNextAsync(joinedEvent);
                     }
                 }
             }
         }
+        //print the current state of both streams
+        Console.WriteLine("Tag Stream:");
+        foreach (var window in tagEvents)
+        {
+            Console.WriteLine($"WindowID: {window.Key}");
+            foreach (var eve in window.Value)
+            {
+                var content = Event.GetContent<Tuple<int, int>>(eve);
+                Console.WriteLine($"ts = {eve.timestamp}, photoID = {content.Item1}, userID = {content.Item2}");
+            }
+        }
+        Console.WriteLine("Like Stream:");
+        foreach (var window in likeEvents)
+        {
+            Console.WriteLine($"WindowID: {window.Key}");
+            foreach (var eve in window.Value)
+            {
+                var content = Event.GetContent<Tuple<int, int>>(eve);
+                Console.WriteLine($"ts = {eve.timestamp}, userID = {content.Item1}, photoID = {content.Item2}");
+            }
+        }
+        Console.WriteLine("--------------------------------------------------\n");
     }
 
 
