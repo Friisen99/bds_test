@@ -14,6 +14,8 @@ internal sealed class FilterOperator : Grain, IFilterOperator
 {
     long maxReceivedWatermark;
     IAsyncStream<Event> outputStream;
+    // TODO: remove
+    int count = 0;
     
     public async Task Init(IAsyncStream<Event> inputStream, IAsyncStream<Event> outputStream)
     {
@@ -30,13 +32,7 @@ internal sealed class FilterOperator : Grain, IFilterOperator
         {
             case EventType.Regular:
                 Debug.Assert(e.timestamp > maxReceivedWatermark);
-                if (Functions.Filter(e))
-                {
-                    //TODO: remove
-                    var content = Event.GetContent<Tuple<long, long, int, int>>(e);
-                    Console.WriteLine($"FO output: {e.timestamp} <{content.Item1}, {content.Item2}, {content.Item3}, {content.Item4}>");
-                    await outputStream.OnNextAsync(e);
-                }
+                if (Functions.Filter(e)) await outputStream.OnNextAsync(e);
                 break;
             case EventType.Watermark:
                 maxReceivedWatermark = Math.Max(maxReceivedWatermark, e.timestamp);

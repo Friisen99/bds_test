@@ -2419,19 +2419,19 @@
     ]
   },
   "packageFolders": {
-    "/home/wsl/.nuget/packages/": {}
+    "/Users/mathias/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/SocialNetwork.csproj",
+      "projectUniqueName": "/Users/mathias/Desktop/bds_test/OrleansWorld/SocialNetwork/SocialNetwork.csproj",
       "projectName": "SocialNetwork",
-      "projectPath": "/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/SocialNetwork.csproj",
-      "packagesPath": "/home/wsl/.nuget/packages/",
-      "outputPath": "/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/SocialNetwork/obj/",
+      "projectPath": "/Users/mathias/Desktop/bds_test/OrleansWorld/SocialNetwork/SocialNetwork.csproj",
+      "packagesPath": "/Users/mathias/.nuget/packages/",
+      "outputPath": "/Users/mathias/Desktop/bds_test/OrleansWorld/SocialNetwork/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/wsl/.nuget/NuGet/NuGet.Config"
+        "/Users/mathias/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net7.0"
@@ -2443,8 +2443,8 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/Utilities.csproj": {
-              "projectPath": "/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/Utilities.csproj"
+            "/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/Utilities.csproj": {
+              "projectPath": "/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/Utilities.csproj"
             }
           }
         }
@@ -2474,7 +2474,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/7.0.114/RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/7.0.404/RuntimeIdentifierGraph.json"
       }
     }
   }

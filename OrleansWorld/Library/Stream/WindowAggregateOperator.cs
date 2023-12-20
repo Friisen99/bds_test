@@ -76,30 +76,12 @@ internal sealed class WindowAggregateOperator : Grain, IWindowAggregateOperator
 
     async Task ProcessRegularEvent(Event e)
     {
-        // Get relevant window starts for the event
-        var windowIDs = GetRelevantWindowStarts(e.timestamp, windowSlide, windowLength);
-        foreach (var windowID in windowIDs)
-        {
-            // Add event to the window
-            if (!this.events.ContainsKey(windowID))
-                this.events[windowID] = new List<Event>();
-            this.events[windowID].Add(e);
-        }
-        
+        var relevantWindow = Helper.GetWindowInstanceID(e.timestamp, windowSlide);
+        // Add event to the window
+        if (!this.events.ContainsKey(relevantWindow))
+            this.events[relevantWindow] = new List<Event>();
+        this.events[relevantWindow].Add(e);
+
         await Task.CompletedTask;
-    }
-
-    private IEnumerable<long> GetRelevantWindowStarts(long timestamp, int windowSlide, int windowLength)
-    {
-        long firstPossibleWindowStart = timestamp - windowLength + windowSlide;
-        firstPossibleWindowStart = (firstPossibleWindowStart / windowSlide) * windowSlide; // align to window slide
-
-        long lastPossibleWindowStart = Helper.GetWindowInstanceID(timestamp, windowSlide);
-
-        for (long windowStart = firstPossibleWindowStart; windowStart <= lastPossibleWindowStart; windowStart += windowSlide)
-        {
-            if (windowStart >= 0) // Avoid negative window starts
-                yield return windowStart;
-        }
     }
 }

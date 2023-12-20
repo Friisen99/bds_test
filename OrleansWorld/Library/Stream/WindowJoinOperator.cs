@@ -3,6 +3,7 @@ using Utilities;
 using SocialNetwork;
 using System.Diagnostics;
 using System.Net.WebSockets;
+using System.Linq;
 
 namespace Library.Stream;
 
@@ -21,10 +22,8 @@ internal sealed class WindowJoinOperator : Grain, IWindowJoinOperator
     long[] maxReceivedWatermark;
 
     // you can add more data structures here
-    // ... ... ...
-    private Dictionary<long, List<Event>> tagEvents = new Dictionary<long, List<Event>>();
-    private Dictionary<long, List<Event>> likeEvents = new Dictionary<long, List<Event>>();
-    private int joinedCount = 0; // TODO: remove
+    private Dictionary<long, List<Event>> tagEvents;
+    private Dictionary<long, List<Event>> likeEvents;
 
     public async Task Init(IAsyncStream<Event> inputStream1, IAsyncStream<Event> inputStream2, IAsyncStream<Event> outputStream, int windowSlide, int windowLength)
     {
@@ -32,6 +31,9 @@ internal sealed class WindowJoinOperator : Grain, IWindowJoinOperator
         this.windowLength = windowLength;
         Debug.Assert(windowLength % windowSlide == 0);
         this.outputStream = outputStream;
+
+        this.tagEvents = new Dictionary<long, List<Event>>();
+        this.likeEvents = new Dictionary<long, List<Event>>();
         
         maxReceivedWatermark = new long[2] { Constants.initialWatermark, Constants.initialWatermark };
 
@@ -50,7 +52,7 @@ internal sealed class WindowJoinOperator : Grain, IWindowJoinOperator
                 break;
             case EventType.Watermark:
                 maxReceivedWatermark[0] = Math.Max(maxReceivedWatermark[0], e.timestamp);
-                await ProcessWatermark();
+                await ProcessWatermark(1);
                 break;
             default:
                 throw new Exception($"Exception event type {e.type} is not supported. ");
@@ -67,72 +69,39 @@ internal sealed class WindowJoinOperator : Grain, IWindowJoinOperator
                 break;
             case EventType.Watermark:
                 maxReceivedWatermark[1] = Math.Max(maxReceivedWatermark[1], e.timestamp);
-                await ProcessWatermark();
+                await ProcessWatermark(2);
                 break;
             default:
                 throw new Exception($"Exception event type {e.type} is not supported. ");
         }
     }
 
-    async Task ProcessWatermark()
+    async Task ProcessWatermark(int sourceID)
     {
-        // process watermark for each stream
-        ProcessStreamWaterMark(maxReceivedWatermark[0], tagEvents);
-        ProcessStreamWaterMark(maxReceivedWatermark[1], likeEvents);
+        // get the WM
+        long WM = maxReceivedWatermark[sourceID - 1];
 
-        // make new watermark event
-        Event newWaterMarkEvent = Event.CreateEvent(Math.Max(maxReceivedWatermark[0], maxReceivedWatermark[1]), EventType.Watermark, Array.Empty<byte>());
-        // emit new watermark event
+        // get the windows for each stream
+        Dictionary<long, List<Event>> otherStreamEvents = (sourceID == 1) ? likeEvents : tagEvents;
+
+        // ts < wm - windowLength should be removed
+        var numberOfElementsRemoved = otherStreamEvents.Where(ev => ev.Key < WM).Count();
+        otherStreamEvents = otherStreamEvents.Where(ev => ev.Key >= WM)
+            .ToDictionary(t => t.Key, t => t.Value);
+
+        //emit new event
+        Event newWaterMarkEvent = Event.CreateEvent(Math.Min(maxReceivedWatermark[0], maxReceivedWatermark[1]), EventType.Watermark, Array.Empty<byte>());
         await outputStream.OnNextAsync(newWaterMarkEvent);
-    }
-
-    private void ProcessStreamWaterMark(long WM, Dictionary<long, List<Event>> events)
-    {
-        if (WM <= 0) return; // skip processing
-
-        // retreive windows
-        List<long> windowIDs = GetRelevantWindowStarts(WM, this.windowSlide, this.windowLength).ToList();
-        foreach (long windowStart in windowIDs)
-        {
-            long windowEnd = windowStart + this.windowLength;
-            if (windowEnd <= WM) events.Remove(windowStart);// iff the window is completely before the watermark, we can delete it
-        }
     }
 
     async Task ProcessRegularEvent(Event e, int sourceID)
     {
-
-        // if (sourceID == 1 && )
-        bool didPrint = false;
-
         // get the windows for each stream
         Dictionary<long, List<Event>> currentStreamEvents = (sourceID == 1) ? tagEvents : likeEvents;
         Dictionary<long, List<Event>> otherStreamEvents = (sourceID == 1) ? likeEvents : tagEvents;
 
-        // TESTING: Extract and print tag or like event details
-        Tuple<int, int> eventDetails = Event.GetContent<Tuple<int, int>>(e);
-        if (sourceID == 1) // Tag
-        {
-            Console.WriteLine($"Tag <{e.timestamp}, photoID = {eventDetails.Item1}, userID = {eventDetails.Item2}>");
-            didPrint = true;
-        }
-        else // Like
-        {
-            Console.WriteLine($"Like <{e.timestamp}, userID = {eventDetails.Item1}, photoID = {eventDetails.Item2}>");
-            didPrint = true;
-        }
         // Get relevant window starts for the event
         var windowIDs = GetRelevantWindowStarts(e.timestamp, this.windowSlide, this.windowLength);
-
-        // assert that there is at least one relevant window
-        Debug.Assert(windowIDs.Count() > 0);
-
-        // TESTING: Print the relevant window starts.
-        // foreach (var windowStart in windowStarts)
-        // {
-        //     Console.WriteLine($"Event timestamp {e.timestamp} falls into window starting at {windowStart}");
-        // }
-
 
 
         // go over the window instances
@@ -153,37 +122,25 @@ internal sealed class WindowJoinOperator : Grain, IWindowJoinOperator
                 {
                     // this is possible join candidates
                     // use qeury specific join function to determine if they can be joined
-                    // Event joinedEvent = Functions.WindowJoin(windowID + windowLength - 1, e, otherStreamEvent);
                     // we want tag first, like second
                     Event joinedEvent = sourceID == 1 ? Functions.WindowJoin(windowID + windowLength - 1, e, otherStreamEvent)
                                                       : Functions.WindowJoin(windowID + windowLength - 1, otherStreamEvent, e);
 
-                    // if the join is successful, print the joined event
-                    if (joinedEvent != null)
-                    {
-                        var jEve = Event.GetContent<Tuple<long, long, int, int>>(joinedEvent);
-                        Console.WriteLine($"Joined: <{joinedEvent.timestamp}, {jEve.Item1}, {jEve.Item2}, photoID = {jEve.Item3}, userID = {jEve.Item4}>");
-                        this.joinedCount++;
-                        await outputStream.OnNextAsync(joinedEvent);
-                    }
+                    // if the join is successful, emit the new joined event
+                    if (joinedEvent != null) await outputStream.OnNextAsync(joinedEvent);
                 }
             }
         }
-        Console.WriteLine($"Printed = {didPrint} => {this.joinedCount} joined events");
-        Console.WriteLine("--------------------------------------------------\n\n");
     }
 
     private IEnumerable<long> GetRelevantWindowStarts(long timestamp, int windowSlide, int windowLength)
     {
-        long firstPossibleWindowStart = timestamp - windowLength + windowSlide;
-        firstPossibleWindowStart = (firstPossibleWindowStart / windowSlide) * windowSlide; // align to window slide
-
+        long firstPossibleWindowStart = timestamp - (windowLength - windowSlide) - (timestamp % windowSlide);
         long lastPossibleWindowStart = Helper.GetWindowInstanceID(timestamp, windowSlide);
 
         for (long windowStart = firstPossibleWindowStart; windowStart <= lastPossibleWindowStart; windowStart += windowSlide)
         {
-            if (windowStart >= 0) // Avoid negative window starts
-                yield return windowStart;
+            yield return windowStart;
         }
     }
 }

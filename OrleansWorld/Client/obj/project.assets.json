@@ -2577,19 +2577,19 @@
     ]
   },
   "packageFolders": {
-    "/home/wsl/.nuget/packages/": {}
+    "/Users/mathias/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Client/Client.csproj",
+      "projectUniqueName": "/Users/mathias/Desktop/bds_test/OrleansWorld/Client/Client.csproj",
       "projectName": "Client",
-      "projectPath": "/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Client/Client.csproj",
-      "packagesPath": "/home/wsl/.nuget/packages/",
-      "outputPath": "/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Client/obj/",
+      "projectPath": "/Users/mathias/Desktop/bds_test/OrleansWorld/Client/Client.csproj",
+      "packagesPath": "/Users/mathias/.nuget/packages/",
+      "outputPath": "/Users/mathias/Desktop/bds_test/OrleansWorld/Client/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/wsl/.nuget/NuGet/NuGet.Config"
+        "/Users/mathias/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net7.0"
@@ -2601,11 +2601,11 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Library/Library.csproj": {
-              "projectPath": "/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Library/Library.csproj"
+            "/Users/mathias/Desktop/bds_test/OrleansWorld/Library/Library.csproj": {
+              "projectPath": "/Users/mathias/Desktop/bds_test/OrleansWorld/Library/Library.csproj"
             },
-            "/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/Utilities.csproj": {
-              "projectPath": "/home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/Utilities.csproj"
+            "/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/Utilities.csproj": {
+              "projectPath": "/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/Utilities.csproj"
             }
           }
         }
@@ -2649,7 +2649,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/7.0.114/RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/7.0.404/RuntimeIdentifierGraph.json"
       }
     }
   }

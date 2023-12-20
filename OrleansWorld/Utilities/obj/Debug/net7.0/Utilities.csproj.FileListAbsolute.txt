@@ -10,3 +10,15 @@
 /home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/obj/Debug/net7.0/refint/Utilities.dll
 /home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/obj/Debug/net7.0/Utilities.pdb
 /home/wsl/BDS-Programming-Assignment-2/OrleansWorld/Utilities/obj/Debug/net7.0/ref/Utilities.dll
+/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/bin/Debug/net7.0/Utilities.deps.json
+/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/bin/Debug/net7.0/Utilities.dll
+/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/bin/Debug/net7.0/Utilities.pdb
+/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/obj/Debug/net7.0/Utilities.csproj.AssemblyReference.cache
+/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/obj/Debug/net7.0/Utilities.GeneratedMSBuildEditorConfig.editorconfig
+/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/obj/Debug/net7.0/Utilities.AssemblyInfoInputs.cache
+/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/obj/Debug/net7.0/Utilities.AssemblyInfo.cs
+/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/obj/Debug/net7.0/Utilities.csproj.CoreCompileInputs.cache
+/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/obj/Debug/net7.0/Utilities.dll
+/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/obj/Debug/net7.0/refint/Utilities.dll
+/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/obj/Debug/net7.0/Utilities.pdb
+/Users/mathias/Desktop/bds_test/OrleansWorld/Utilities/obj/Debug/net7.0/ref/Utilities.dll
